@@ -20,8 +20,8 @@
     - 회원은 일반과 VIP 두 가지 등급이 있다.
     - 회원 데이터는 자체 DB를 구축할 수 있고, 외부 시스템과 연동할 수 있다. (미확정)
   
-![img.png](img.png)
-![img_1.png](img_1.png)
+![img.png](docs/img.png)
+![img_1.png](docs/img_1.png)
 
 
 ### 주문과 할인 도메인 설계
