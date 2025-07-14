@@ -77,10 +77,89 @@
 ### 새로운 할인 정책 적용과 문제점
 - 할인 정책 변경을 위해 `OrderServiceImpl` 코드 변경
 
+```java
+public class OrderServiceImpl implements OrderService {
+	// private final DiscountPolicy discountPolicy = new FixDiscountPolicy();
+	private final DiscountPolicy discountPolicy = new RateDiscountPolicy();
+}
+```
+
+
 #### 문제점
 - 우리는 역할과 구현을 분리했다. ✔️
 - 다형성도 활용하고, 인터페이스와 구현 객체를 분리했다. ✔️
 - OCP, DIP 같은 객체 지향 설계 원칙을 충실히 준수했다. ✖️
+ - -> 그렇게 보이지만 사실은 아니다.
+ - DIP : 주문서비스 클라이언트 `OrderServiceImpl` 는 `DiscountPolicy` 인터페이스에 의존하면서 DIP를 지킨 것 같아 보인다.
+   - -> 클래스 의존관계를 분석해보자. 추상(인터페이스) 뿐만 아니라 **구체(구현) 클래스에도 의존**하고 있다.
+   - 추상(인터페이스) 의존 : `DiscountPolicy`
+   - 구체(구현) 클래스 : `FixDiscountPolicy`, `RateDiscountPolicy`
+ - OCP : 변경하지 않고 확장할 수 있다고 했는데!
+   - -> **지금 코드는 기능을 확장해서 변경하면, 클라이언트 코드에 영향을 준다!** 따라서 OCP를 위반한다. 
 
 <br>
 
+왜 클라이언트 코드를 변경해야 할까?
+
+<br>
+
+**기대했던 의존관계**
+
+<img width="760" height="300" alt="image" src="https://github.com/user-attachments/assets/97396c1e-ba3b-43a6-8137-0e4c38ae03ef" />
+
+=> 지금까지 단순히 `DiscountPolicy` 인터페이스에만 의존한다고 생각했지만,,
+
+<br>
+
+**실제 의존관계**
+
+<img width="760" height="293" alt="image" src="https://github.com/user-attachments/assets/c14179d2-6eac-4b84-ab59-d0d2138512c8" />
+
+- 잘보면 클라이언트인 `OrderServiceImpl`이 `DiscountPolicy`인터페이스 뿐만 아니라 `FixDiscountPolicy` 인 구체 클래스도 함께 의존하고 있다. 실제 코드를 보면 의존하고 있다! **DIP 위반**
+- 그래서 `FixDiscountPolicy`를 `RateDiscountPolicy`로 변경하는 순간 `OrderServiceImpl`의 소스 코드도 함께 변경해야 한다. **OCP 위반**
+
+
+### 문제 해결
+- 클라이언트 코드인 `OrderServiceImpl`은 `DiscountPolicy`의 인터페이스 뿐만 아니라 구체 클래스도 함께 의존한다.
+- 그래서 구체 클래스를 변경할때 클라이언트 코드도 함께 변경해야한다.
+- DIP 위반 -> 추상에만 의존하도록 변경 (인터페이스에만 의존)
+- DIP를 위반하지 않도록 인터페이스에만 의존하도록 의존관계를 변경하면 된다.
+
+```java
+public class OrderServiceImpl implements OrderService {
+   // private final DiscountPolicy discountPolicy = new RateDiscountPolicy();
+    private DiscountPolicy discountPolicy;
+}
+```
+
+- 인터페이스에만 의존하도록 설계와 코드 변경
+- 구현체가 없는데 어떻게 코드를 실행할 수 있는까?
+- 실제 실행을 해보면 NPE(null pointer exception)가 발생한다.
+- => 클라이언트인 `OrderServiceImpl`에 `DiscountPolicy`의 구현 객체를 대신 생성하고 주입해주어야 한다.
+
+### 관심사의 분리
+#### AppConfig 등장
+- 애플리케이션의 전체 동작 방식을 구성하기 위해, **구현 객체를 생성**하고, **연결**하는 책임을 가지는 별도의 설정 클래스 만들기
+
+```java
+public class AppConfig {
+
+  public MemberService memberService() {
+     return new MemberServiceImpl(new MemoryMemberRepository());
+  }
+
+  public OrderService orderService() {
+     return new OrderServiceImpl(new MemoryMemberRepository(),new FixDiscountPolicy());
+  }
+}
+```
+
+AppConfig는 애플리케이션의 실제 동작에 필요한 구현 객체를 생성함
+- `MemberServiceImpl`
+- `MemoryMemberRepository`
+- `OrderServiceImpl`
+- `FixDiscountPolicy`
+
+AppConfig는 생성한 객체의 인스턴스 참조를 **생성자를 통해서 주입**해줌
+- `MemberServiceImpl` -> `MemoryMemberRepository`
+- `OrderServiceImpl` -> `MemoryMemberRepository`, `FixDiscountPolicy`
