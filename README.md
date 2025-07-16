@@ -138,8 +138,14 @@ public class OrderServiceImpl implements OrderService {
 - => 클라이언트인 `OrderServiceImpl`에 `DiscountPolicy`의 구현 객체를 대신 생성하고 주입해주어야 한다.
 
 ### 관심사의 분리
+애플리케이션이 하나의 공연이라 가정, 인터페이스를 배역이라 하자. <br>
+공연을 할 때, 역할을 누가 할지 배우들이 정하는 게 아니다. <br>
+이전의 코드 = 배우가 공연도 해야하고 배우의 역할도 정하는 "다양한 책임"을 가지고 있었음!! <br> <br>
+**관심사를 분리하자!** <br>
+공연을 구성하고, 담당 배우를 섭외하고 역할에 맞는 배우를 지정하는 책임을 담당하는 별도의 "공연 기회자"가 필요하다.
+
 #### AppConfig 등장
-- 애플리케이션의 전체 동작 방식을 구성하기 위해, **구현 객체를 생성**하고, **연결**하는 책임을 가지는 별도의 설정 클래스 만들기
+- 애플리케이션의 전체 동작 방식을 구성(config)하기 위해, **구현 객체를 생성**하고, **연결**하는 책임을 가지는 별도의 설정 클래스 만들기
 
 ```java
 public class AppConfig {
@@ -154,12 +160,20 @@ public class AppConfig {
 }
 ```
 
-AppConfig는 애플리케이션의 실제 동작에 필요한 구현 객체를 생성함
-- `MemberServiceImpl`
-- `MemoryMemberRepository`
-- `OrderServiceImpl`
-- `FixDiscountPolicy`
-
 AppConfig는 생성한 객체의 인스턴스 참조를 **생성자를 통해서 주입**해줌
 - `MemberServiceImpl` -> `MemoryMemberRepository`
 - `OrderServiceImpl` -> `MemoryMemberRepository`, `FixDiscountPolicy`
+
+![img_2.png](docs/img_2.png)
+- 객체의 생성과 연결은 AppConfig가 담당한다.
+- DIP 완성 : MemberServiceImpl은 MemberRepository인 추상에만 의존하면 된다. 구체적인 클래스를 몰라도 된다.
+- 관심사의 분리 : 객체를 생성하고 연결하는 역할과 실행하는 역할이 명확히 분리되었다.
+
+<br>
+
+#### AppConfig 리팩토링
+- 현재 AppConfig를 보면 중복이 있고, 역할에 따른 구현이 잘 안보인다.
+- 기대하는 그림 
+<br>
+
+![img_3.png](docs/img_3.png)
