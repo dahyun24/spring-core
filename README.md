@@ -172,10 +172,34 @@ AppConfig는 생성한 객체의 인스턴스 참조를 **생성자를 통해서
 <br>
 
 
-## 스프링 컨테이너와 스프링 빈
 #### AppConfig 리팩토링
 - 현재 AppConfig를 보면 중복이 있고, 역할에 따른 구현이 잘 안보인다.
 - 기대하는 그림 
 <br>
 
 ![img_3.png](docs/img_3.png)
+
+
+## 스프링 컨테이너와 스프링 빈
+- 스프링 컨테이너가 생성되는 과정
+  ```java
+  ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+  ```
+
+- `ApplicationContext`를 스프링 컨테이너라고 한다. 인터페이스이다.
+- 직전에 AppConfig를 사용했던 방식이 어노테이션 기반의 자바 설정 클래스로 스프링 컨테이너를 만든 것이다.
+- 자바 설정 클래스를 기반으로 스프링 컨테이너(`ApplicationContext` )를 만들어보자.
+  - `new AnnotationConfigApplicationContext(AppConfig.class);`
+  - 이 클래스는 `ApplicationContext` 인터페이스의 구현체이다.
+
+### 스프링 컨테이너 생성 과정
+1. 스프링 컨테이너 생성
+
+<img width="584" height="275" alt="스크린샷 2025-08-02 오후 1 50 31" src="https://github.com/user-attachments/assets/30e0e9e6-6672-4875-b92a-c471be9b0abf" />
+
+- new AnnotationConfigApplicationContext(AppConfig.class)`
+- 스프링 컨테이너를 생성할 때는 구성 정보를 지정해주어야 한다.
+- 여기서는 `AppConfig.class` 를 구성 정보로 지정했다.
+
+2. 스프링 빈 등록
+3. 스프링 빈 의존관계 설정
